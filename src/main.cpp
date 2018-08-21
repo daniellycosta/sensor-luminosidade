@@ -27,6 +27,8 @@ void setup(){
 
     String JSON;
     JSON += "{\"token\":\""+token+ "\",\"data\":{\"name\": \"sensorLuminosidade\",  \"serial\": \""+ serialSensor +"\",\"protocol\":\"ws\",\"controllers\":[{\"key\":\"ON\",\"class\":\"onoff\",\"tag\":\"on/off\"}],\"sensors\":[{\"key\": \"LUM\",\"unit\": \"percentual\",\"type\":\"number\",\"tag\":\"SensorLuminosidade\"}]}}";
+
+    SaIoTDeviceLib sensorLuminosidade("sensorLuminosidade", serialSensor, "ricardo@email.com");
 }
 
 void loop(){
