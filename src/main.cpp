@@ -5,9 +5,11 @@
 #include <ArduinoJson.h>
 #include <WiFiManager.h>
 #include <EEPROM.h>
-#include<SaIoTDeviceLib.h>
+
 
 #define serial "sensor-luminosidade"
+#define timeout 3000
+
 #define HOST "10.7.227.121"
 #define POSTDISPOSITIVO "/manager/post/device/"
 #define PORT 3002 //WS
@@ -18,19 +20,40 @@ String serialSensor = "sensorLum";
 String token = "QwrC79NKZOjmgHTeb2qY";
 
 SocketIOClient socket;
-//int sensorValue = analogRead(SENSOR_PIN);
+unsigned long int lastTime = millis();
+
+void sendValue();
 
 void setup(){
+    pinMode(SENSOR_PIN, OUTPUT);
     Serial.begin(115200);
     WiFiManager wifi;
     wifi.autoConnect(serial);
 
     String JSON;
-    JSON += "{\"token\":\""+token+ "\",\"data\":{\"name\": \"sensorLuminosidade\",  \"serial\": \""+ serialSensor +"\",\"protocol\":\"ws\",\"controllers\":[{\"key\":\"ON\",\"class\":\"onoff\",\"tag\":\"on/off\"}],\"sensors\":[{\"key\": \"LUM\",\"unit\": \"percentual\",\"type\":\"number\",\"tag\":\"SensorLuminosidade\"}]}}";
+    JSON += "{\"token\":\""+token+ "\",\"data\":{\"name\": \"sensorLuminosidade\", \"serial\": \""+ serialSensor +"\",\"protocol\":\"ws\",\"sensors\":[{\"key\": \"LUM\",\"unit\": \"percentual\",\"type\":\"number\",\"tag\":\"SensorLuminosidade\"}]}}";
+    
+    if (!socket.connect(HOST, PORT)){
+    return;
+    Serial.println("!socket.connect");
+  }
+  else if (socket.connected()){
+    socket.emit(POSTDISPOSITIVO, JSON);
+    Serial.println("connect");
+  }
 
-    SaIoTDeviceLib sensorLuminosidade("sensorLuminosidade", serialSensor, "ricardo@email.com");
 }
 
 void loop(){
-
+    socket.monitor();
+    if((millis()-lastTime) < timeout){
+        sendValue();
+        lastTime = millis();
+    }
 }
+
+void sendValue(){
+    String sensorValue = String(analogRead(SENSOR_PIN));
+    Serial.print(sensorValue);
+    socket.emit(POSTDISPOSITIVO, sensorValue);
+};
